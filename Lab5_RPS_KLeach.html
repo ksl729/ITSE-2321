@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Rock-Paper-Scissors: Fast-Five Edition</title>
+    <style>
+        :root {
+            --primary: #8838ca;
+            --secondary: #2c8d24;
+            --bg: #cbd4dd;
+            --card: #7da8ca;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--card);
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+        }
+
+        h1, h2 { text-align: center; color: var(--primary); }
+
+        /* Legend Styles */
+        .legend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .legend-item {
+            text-align: center;
+            padding: 10px;
+            border: 1px solid #050505;
+            border-radius: 8px;
+        }
+        .legend-item img { width: 50px; height: 50px; object-fit: contain; }
+
+        /* Play Area */
+        .play-area {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 2rem 0;
+        }
+        .move-btn {
+            cursor: pointer;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 10px;
+            transition: transform 0.2s, border-color 0.2s;
+            background: none;
+        }
+        .move-btn:hover { transform: scale(1.1); border-color: var(--primary); }
+        .move-btn img { width: 60px; height: 60px; display: block; }
+
+        /* Result & Score */
+        .result-area {
+            text-align: center;
+            font-size: 1.2rem;
+            min-height: 3rem;
+            font-weight: bold;
+        }
+        .score-tally {
+            display: flex;
+            justify-content: space-around;
+            font-size: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        /* Custom Interface */
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .move-config-row {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            margin-bottom: 15px;
+            padding: 10px;
+            border: 1px solid #050505;
+        }
+        
+        /* Rolodex Styles */
+        .rolodex {
+            text-align: center;
+            padding: 1rem;
+            border: 2px dashed var(--primary);
+            margin-top: 1rem;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+        button.secondary { background: var(--secondary); }
+        button.danger { background: #7c0a0a; }
+        button:disabled { background: #7a7b7c; cursor: not-allowed; }
+
+        .hidden { display: none; }
+
+        .material-symbols-outlined {
+        font-size: 60px;
+        display: block;
+        margin: 0 auto;
+}
+
+        .legend-item .material-symbols-outlined {
+        font-size: 40px;
+}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Rock-Paper-Scissors: Fast-Five Edition</h1>
+
+    <!-- MAIN GAME INTERFACE -->
+    <div id="game-interface" class="card">
+        <div id="legend" class="legend-grid"></div>
+        <div id="win-rules" style="font-size: 0.8rem; text-align: center; margin-bottom: 1rem;"></div>
+        <!-- The score tally section displays the current scores for both the player and the CPU. -->
+        <div class="score-tally">
+            <div>Player: <span id="player-score">0</span></div>
+            <div>CPU: <span id="cpu-score">0</span></div>
+        </div>
+
+        <div class="play-area" id="player-choices"></div>
+        <!-- The result area displays the outcome of the last round played. -->
+        <div class="result-area" id="result-text">Select a move to start!</div>
+        <!-- The buttons below allow the player to restart the game or customize the move set. -->
+        <div style="text-align: center; margin-top: 1rem;">
+            <button onclick="gameEngine.restart()">Restart Game</button>
+            <button class="secondary" onclick="ui.toggleConfig()">Customize Moves</button>
+        </div>
+    </div>
+
+    <!-- CUSTOM MOVE SELECTION INTERFACE -->
+    <div id="config-interface" class="card hidden">
+        <h2>Customize Move Set</h2>
+        <div class="config-grid">
+            <div id="move-editors">
+                <!-- This piece will populate 5 move editors here -->
+            </div>
+            <div class="controls">
+                <h3>Save & Manage</h3>
+                <input type="text" id="set-name" placeholder="Name your set..." style="width: 100%; padding: 8px; margin-bottom: 10px;">
+                <!-- Save Current Set button allows the user to save the current configuration of moves as a new set. -->
+                <button onclick="ui.saveCurrentSet()" style="width: 100%;">Save Current Set</button>
+                
+                <div class="rolodex">
+                    <div id="rolodex-display">No sets saved</div>
+                    <div style="margin-top: 10px;">
+                        <button onclick="ui.navSet(-1)">⏮</button>
+                        <button onclick="ui.navSet(1)">⏭</button>
+                    </div>
+                    <!-- Delete Current Set button allows the user to delete the currently selected move set from the saved sets. -->
+                    <button class="danger" style="margin-top: 10px;" onclick="ui.deleteSet()">Delete Current Set</button>
+                </div>
+            </div>
+        </div>
+        <div style="text-align: center; margin-top: 20px;">
+            <!-- Back to Game button allows the user to return to the main game interface from the customization interface. -->
+            <button onclick="ui.toggleConfig()">Back to Game</button>
+        </div>
+    </div>
+</div>
+
+<script>
+
+
+/*BACK-END LOGIC & CLASSES*/
+// The Move class represents a single move in the game, including its name, image URL, and the moves it can beat.
+class Move {
+    constructor(name, imageUrl, beats) {
+        this.name = name;
+        this.imageUrl = imageUrl;
+        this.beats = beats;
+    }
+}
+// The MoveSet class represents a collection of moves, allowing for different configurations of the game.
+class MoveSet {
+    constructor(name, moves) {
+        this.name = name;
+        this.moves = moves; 
+    }
+}
+
+class GameEngine {
+    <!-- This constructor initializes the game engine with default values -->
+    constructor() {
+        this.playerScore = 0;
+        this.cpuScore = 0;
+        this.currentMoveSet = null;
+        this.winningScore = 5;
+        this.isGameOver = false;
+    }
+    <!-- This method handles the game logic for a single round -->
+    play(playerMoveName) {
+        if (this.isGameOver) return null;
+
+        const moves = this.currentMoveSet.moves;
+        const cpuMove = moves[Math.floor(Math.random() * moves.length)];
+        const playerMove = moves.find(m => m.name === playerMoveName);
+        <!-- Determines the outcome for the round -->
+        let result = "";
+        if (playerMove.name === cpuMove.name) {
+            result = "TIE";
+        } else if (playerMove.beats.map(b => b.trim().toLowerCase()).includes(cpuMove.name.trim().toLowerCase())) {
+            result = "PLAYER WINS";
+            this.playerScore++;
+        } else if (cpuMove.beats.map(b => b.trim().toLowerCase()).includes(playerMove.name.trim().toLowerCase())) {
+            result = "CPU WINS";
+            this.cpuScore++;
+        } else {
+            result = "DRAW/UNCLEAR";
+        }
+
+        const matchOver = this.checkWinCondition();
+
+        return { result, playerMove, cpuMove, matchOver };
+    }
+    <!-- This method checks if the game has been won by either player -->
+    <!-- Then returns the winner -->
+    checkWinCondition() {
+        if (this.playerScore >= this.winningScore) {
+            this.isGameOver = true;
+            return "PLAYER";
+        }
+        if (this.cpuScore >= this.winningScore) {
+            this.isGameOver = true;
+            return "CPU";
+        }
+        return null;
+    }
+    <!-- Restarts the game -->
+    restart() {
+        this.playerScore = 0;
+        this.cpuScore = 0;
+        this.isGameOver = false;
+        ui.updateScore();
+        ui.renderResult("Game Restarted!");
+    }
+}
+
+/*UI & STATE MANAGEMENT*/
+<!-- This piece manages the UI and game state -->
+const storage = {
+    sets: [],
+    currentIndex: 0,
+
+    init() {
+        const defaultMoves = [
+            new Move("Rock", "../labs/bomb_24dp_8838CA_FILL0_wght400_GRAD0_opsz24.png", ["Scissors", "Cockroach"]),
+            new Move("Paper", "../labs/contract_24dp_2C8D24_FILL0_wght400_GRAD0_opsz24.png", ["Rock", "Bomb"]),
+            new Move("Scissors", "../labs/content_cut_24dp_8838CA_FILL0_wght400_GRAD0_opsz24.png", ["Paper", "Cockroach"]),
+            new Move("Cockroach", "../labs/pest_control_24dp_2C8D24_FILL0_wght400_GRAD0_opsz24.png", ["Bomb", "Paper"]),
+            new Move("Bomb", "../labs/bomb_24dp_8838CA_FILL0_wght400_GRAD0_opsz24.png", ["Rock", "Scissors"]) // Using Material Symbol!
+        ];
+        this.sets.push(new MoveSet("Classic 5", defaultMoves));
+    }
+};
+
+const gameEngine = new GameEngine();
+const ui = {
+    toggleConfig() {
+        document.getElementById('game-interface').classList.toggle('hidden');
+        document.getElementById('config-interface').classList.toggle('hidden');
+        if (!document.getElementById('config-interface').classList.contains('hidden')) {
+            this.renderConfigEditors();
+            this.updateRolodex();
+        } else {
+            this.loadMoveSet(storage.sets[storage.currentIndex]);
+        }
+    },
+
+    renderConfigEditors() {
+        const container = document.getElementById('move-editors');
+        container.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+            const move = gameEngine.currentMoveSet.moves[i];
+            const div = document.createElement('div');
+            div.className = 'move-config-row';
+            div.innerHTML = `
+                <strong>Move ${i+1}</strong>
+                <input type="text" value="${move.name}" onchange="ui.updateMoveData(${i}, 'name', this.value)" placeholder="Name">
+                <input type="text" value="${move.imageUrl}" onchange="ui.updateMoveData(${i}, 'url', this.value)" placeholder="Image URL">
+                <input type="text" value="${move.beats.join(',')}" onchange="ui.updateMoveData(${i}, 'beats', this.value)" placeholder="Beats (comma separated)">
+            `;
+            container.appendChild(div);
+        }
+    },
+
+    updateMoveData(index, field, value) {
+        const move = gameEngine.currentMoveSet.moves[index];
+        if (field === 'name') move.name = value;
+        if (field === 'url') move.imageUrl = value;
+        if (field === 'beats') move.beats = value.split(',').map(s => s.trim());
+    },
+
+    saveCurrentSet() {
+        const name = document.getElementById('set-name').value || "Unnamed Set";
+        const newSet = new MoveSet(name, JSON.parse(JSON.stringify(gameEngine.currentMoveSet.moves)));
+        storage.sets.push(newSet);
+        storage.currentIndex = storage.sets.length - 1;
+        this.updateRolodex();
+        alert("Set Saved!");
+    },
+
+    navSet(dir) {
+        storage.currentIndex = (storage.currentIndex + dir + storage.sets.length) % storage.sets.length;
+        this.updateRolodex();
+    },
+
+    deleteSet() {
+        if (storage.sets.length <= 1) return alert("Must keep at least one set!");
+
+        const deletedSet = storage.sets[storage.currentIndex];
+        storage.sets.splice(storage.currentIndex, 1);
+        storage.currentIndex = 0;
+        this.updateRolodex();
+
+        // If the deleted set was the one activein the game, this will reset to default
+        if (gameEngine.currentMoveSet === deletedSet) {
+            this.loadMoveSet(storage.sets[0]);
+        }
+    },
+
+    updateRolodex() {
+        const display = document.getElementById('rolodex-display');
+        const set = storage.sets[storage.currentIndex];
+        display.innerHTML = `<strong>${set.name}</strong><br><small>${set.moves.length} moves</small>`;
+        // Load the selected set into the editor
+        gameEngine.currentMoveSet = set;
+        this.renderConfigEditors();
+    },
+
+    loadMoveSet(set) {
+        gameEngine.currentMoveSet = set;
+        this.renderLegend();
+        this.renderPlayArea();
+    },
+
+    renderLegend() {
+        const legend = document.getElementById('legend');
+        const rules = document.getElementById('win-rules');
+        legend.innerHTML = '';
+        rules.innerHTML = '';
+        
+        gameEngine.currentMoveSet.moves.forEach(m => {
+            const item = document.createElement('div');
+            item.className = 'legend-item';
+            item.innerHTML = `<img src="${m.imageUrl}"><br><span>${m.name}</span>`;
+            legend.appendChild(item);
+
+            const ruleStr = m.beats.map(b => `${m.name} > ${b}`).join(', ');
+            if (ruleStr) {
+                rules.innerHTML += `<div>${ruleStr}</div>`;
+            }
+        });
+    },
+
+    renderPlayArea() {
+        const area = document.getElementById('player-choices');
+        area.innerHTML = '';
+        gameEngine.currentMoveSet.moves.forEach(m => {
+            const btn = document.createElement('button');
+            btn.className = 'move-btn';
+            btn.innerHTML = `<img src="${m.imageUrl}"><br>${m.name}`;
+            btn.onclick = () => this.handlePlayerMove(m.name);
+            area.appendChild(btn);
+        });
+    },
+
+    handlePlayerMove(moveName) {
+        if (gameEngine.isGameOver) {
+            this.renderResult("Game Over! Click Restart to play again.");
+            return;
+        }
+        const outcome = gameEngine.play(moveName);
+        if (!outcome) return;
+
+        let msg = `${outcome.result}!<br>You: ${outcome.playerMove.name} | CPU: ${outcome.cpuMove.name}`;
+
+        if (outcome.matchOver === "PLAYER") {
+            msg += `<br>🎉 <strong>YOU WIN THE MATCH!</strong> Click Restart to play again.`;
+        } else if (outcome.matchOver === "CPU") {
+            msg += `<br>💻 <strong>CPU WINS THE MATCH!</strong> Click Restart to play again.`;
+        }
+
+        this.renderResult(msg);
+        this.updateScore();
+    },
+
+    renderResult(msg) {
+        document.getElementById('result-text').innerHTML = msg;
+    },
+
+    updateScore() {
+        document.getElementById('player-score').innerText = gameEngine.playerScore;
+        document.getElementById('cpu-score').innerText = gameEngine.cpuScore;
+    }
+};
+
+// Initialize Application
+storage.init();
+gameEngine.currentMoveSet = storage.sets[0];
+ui.loadMoveSet(storage.sets[0]);
+ui.renderLegend();
+ui.renderPlayArea();
+
+</script>
+</body>
+</html>
