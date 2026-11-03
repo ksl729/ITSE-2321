@@ -1,4 +1,4 @@
-﻿namespace Lab6_Payroll_KLeach
+namespace Employee_Payroll_Form_KLeach
 {
 
     // Program: Employee Payroll System
@@ -6,7 +6,7 @@
 
     //This interface that allows input of various employee types, instantiates the appropriate employee object for said employee
     //It can also display the employees and their weekly pay.
-    
+
     internal class Program
     {
         [System.STAThread]

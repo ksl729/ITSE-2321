@@ -1,6 +1,6 @@
 using System;
 
-namespace Lab6_Payroll_KLeach
+namespace Employee_Payroll_Form_KLeach
 {
     public class SalaryEmployee : Employee
     {
